@@ -1,68 +1,97 @@
-let shapes = []; // an array that will hold our shapes
-let poem = ["don't", "listen", "to", "them", "they", "are", "opressing", "you"];
-let numberOfShapes = 100; // how many words to draw
-let mouseThreshold = 50; // how close can your mouse get to a shape before it moves
-let moveDistance = 150; // how far shapes move away from your mouse
-let animateDistance = 50; // how much each shape animates 
+let letters = [];
+let isMoving = false;
+let img1, img2;
+let angle = 0;
+let spinning = false;
+let spinSpeed = 0.05;
 
-// create a "shape" class that holds all information about each shape
-class Shape {
-  constructor() {
-    this.x = random(0, windowWidth); // each shape has a random x position
-    this.y = random(0, windowHeight); // and a random y position
-    this.radius = random(5, 25); // give each shape a random size between two values
-    this.color = color(random(0, 255), random(0, 255), random(0, 255)); // and a random color
-    this.word = random(poem); // each one has a random word from the poem array
-  }
+let img1X = 150;
+let img1Y = 350;
+let img1W = 300;
+let img1H = 250;
 
-  // create a function that moves a shape away from your mouse
-  updateShape() {
-    let mouseDistance = int(dist(this.x, this.y, mouseX, mouseY)); // check the distance from your mouse to the shape
-    if (mouseDistance <= mouseThreshold) { // if your mouse gets closer than the threshold...
-      this.x += random(-moveDistance, moveDistance); // give the shape a new x position
-      this.y += random(-moveDistance, moveDistance); // and a new y position
-    }
-  }
-  
-  // create a function to animate each shape
-  animateShape(){
-    this.x = lerp(this.x, random(this.x - animateDistance, this.x + animateDistance), 0.01);
-    this.y = lerp(this.y, random(this.y - animateDistance, this.y + animateDistance), 0.01);
-  }
 
-  // create a function to draw each shape
-  drawShape() {
-    fill(this.color);
-    textAlign(CENTER);
-    textSize(this.radius);
-    text(this.word, this.x, this.y);
-  }
+let img2X = 87;
+let img2Y = 310;
+let img2W = 250;
+let img2H = 250;
+
+
+function preload() {
+  img1 = loadImage('p5blades-02.png');
+  img2 = loadImage('p5blades2.png');
 }
 
 function setup() {
-  createCanvas(windowWidth, windowHeight); // create a canvas that fills the whole screen
-  
-  // create a bunch of shape objects
-  for (let i = 0; i < numberOfShapes; i++) {
-    shapes.push(new Shape());
+  createCanvas(windowWidth, windowHeight);
+  textAlign(CENTER, CENTER);
+  textSize(64);
+  imageMode(CENTER);
+
+  let word = ["b", "l", "o", "w", "."];
+  let spacing = 60;
+  let startX = width / 2 - (word.length - 1) * spacing / 2;
+  let y = height / 2;
+  let color = 'pink';
+  for (let i = 0; i < word.length; i++) {
+    let x = startX + i * spacing;
+    letters.push(new Letter(word[i], x, y));
   }
 }
 
 function draw() {
-  background(244);
+  background('yellow');
 
-  // update shape positions based off of the mouse location
-  // and draw them to the screen
-  for (let i = 0; i < shapes.length; i++) {
-    shapes[i].updateShape();
-    shapes[i].animateShape();
-    shapes[i].drawShape();
+  for (let l of letters) {
+    if (isMoving) l.update();
+    l.display();
   }
-  
-  // draw ellipse that follows mouse
-  ellipse(mouseX, mouseY, 50, 50);
+
+  image(img1, img1X, img1Y, img1W, img1H);
+
+  push();
+  translate(img2X, img2Y);
+    if (spinning) angle += spinSpeed;
+    rotate(angle);
+    image(img2, 0, 0, img2W, img2H);
+  pop();
 }
 
-function windowResized() {
-  resizeCanvas(windowWidth, windowHeight);
+function mousePressed() {
+  let halfW = img2W / 2;
+  let halfH = img2H / 2;
+  if (mouseX > img2X - halfW && mouseX < img2X + halfW &&
+      mouseY > img2Y - halfH && mouseY < img2Y + halfH) {
+    spinning = !spinning;
+    isMoving = spinning;
+  }
+}
+
+class Letter {
+  constructor(char, x, y) {
+    this.char = char;
+    this.x = x;
+    this.y = y;
+    this.vx = random(2, 5);
+    this.vy = random(-2, 2);
+    this.col = color('pink');
+  }
+
+  update() {
+    this.x += this.vx;
+    this.y += this.vy;
+    if (this.x > width - 20) {
+      this.x = width - 20;
+      this.vx = 0;
+    }
+    if (this.y < 20 || this.y > height - 20) {
+      this.vy *= random(5,10);
+    }
+  }
+
+  display() {
+    fill(this.col);
+    noStroke();
+    text(this.char, this.x, this.y);
+  }
 }
